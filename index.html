@@ -43,6 +43,7 @@
     #status {
       font-size: 20px;
       margin-bottom: 10px;
+      text-align: center; /* Center text */
       font-family: 'Courier New', Courier, monospace;
       font-weight: bold;
       text-transform: uppercase;
@@ -77,7 +78,7 @@
       var maxAppleDistance = 0.75 * radius;
       var isMouseDown = false;
       var mouseDownTime = 0;
-      var maxHoldTime = 1000;
+      var maxHoldTime = 1000; // 1 second max hold time
       var statusField = document.getElementById("status");
 
       var snake = {
@@ -212,27 +213,22 @@
         snake.angle = Math.atan2(y, x);
       }
 
-      canvas.addEventListener("mousedown", (e) => {
+      function handleInput(e) {
         updateDirection(e);
         startGame();
-      });
+        mouseDownTime = Date.now();
+      }
 
-      canvas.addEventListener("mousemove", (e) => {
-        if (isMouseDown) {
+      function handleMove(e) {
+        if (Date.now() - mouseDownTime <= maxHoldTime) {
           updateDirection(e);
         }
-      });
+      }
 
-      canvas.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        updateDirection(e.touches[0]);
-        startGame();
-      });
-
-      canvas.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        updateDirection(e.touches[0]);
-      });
+      canvas.addEventListener("mousedown", handleInput);
+      canvas.addEventListener("mousemove", handleMove);
+      canvas.addEventListener("touchstart", handleInput);
+      canvas.addEventListener("touchmove", handleMove);
 
       document.getElementById("stop-btn").addEventListener("click", stopGame);
     })();
