@@ -3,7 +3,7 @@
 <head>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Snake Game</title>
   <style>
     body {
@@ -13,6 +13,7 @@
       justify-content: center;
       height: 100vh;
       margin: 0;
+      overflow: hidden; /* Prevent scrolling */
       background-color: #333;
       color: white;
       font-family: Arial, sans-serif;
@@ -50,9 +51,9 @@
   </style>
 </head>
 <body>
-  <p id="status">Tap (click) to start</p>
+  <p id="status">Tap to start</p>
   <div style="position: relative;">
-    <canvas id="game-board" width="400" height="400"></canvas>
+    <canvas id="game-board"></canvas>
   </div>
   <div class="controls">
     <button id="stop-btn" disabled>Stop</button>
@@ -63,10 +64,16 @@
       var canvas = document.getElementById("game-board");
       var context = canvas.getContext("2d");
 
+      // Adjust canvas size based on device width
+      var isMobile = window.innerWidth <= 768;
+      var size = isMobile ? Math.min(window.innerWidth, window.innerHeight) * 0.8 : 400;
+      canvas.width = size;
+      canvas.height = size;
+
       var grid = 16;
       var count = 0;
       var gameRunning = false;
-      var radius = 200;
+      var radius = size / 2;
       var maxAppleDistance = 0.75 * radius;
       var isMouseDown = false;
       var mouseDownTime = 0;
@@ -74,8 +81,8 @@
       var statusField = document.getElementById("status");
 
       var snake = {
-        x: 200,
-        y: 200,
+        x: radius,
+        y: radius,
         dx: grid,
         dy: 0,
         cells: [],
@@ -84,8 +91,8 @@
       };
 
       var apple = {
-        x: 320,
-        y: 320,
+        x: size * 0.8,
+        y: size * 0.8,
       };
 
       function getRandomInt(min, max) {
@@ -97,7 +104,7 @@
         do {
           apple.x = getRandomInt(0, canvas.width / grid) * grid;
           apple.y = getRandomInt(0, canvas.height / grid) * grid;
-          distance = Math.hypot(apple.x - 200, apple.y - 200);
+          distance = Math.hypot(apple.x - radius, apple.y - radius);
         } while (distance > maxAppleDistance);
       }
 
@@ -108,7 +115,7 @@
           snake.x += Math.cos(snake.angle) * grid;
           snake.y += Math.sin(snake.angle) * grid;
 
-          if (Math.hypot(snake.x - 200, snake.y - 200) > radius) {
+          if (Math.hypot(snake.x - radius, snake.y - radius) > radius) {
             gameOver("Your snake touched the border");
             return;
           }
@@ -133,7 +140,7 @@
             snake.cells.splice(selfCollision, 1);
             snake.maxCells--;
 
-            if (snake.maxCells < 4) {
+            if (snake.maxCells < 1) {
               gameOver("Your snake ate itself");
               return;
             }
@@ -189,8 +196,8 @@
       }
 
       function resetGame() {
-        snake.x = 200;
-        snake.y = 200;
+        snake.x = radius;
+        snake.y = radius;
         snake.cells = [];
         snake.maxCells = 4;
         snake.angle = 0;
@@ -200,26 +207,31 @@
 
       function updateDirection(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left - 200;
-        const y = e.clientY - rect.top - 200;
+        const x = (e.clientX || e.touches[0].clientX) - rect.left - radius;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top - radius;
         snake.angle = Math.atan2(y, x);
       }
 
       canvas.addEventListener("mousedown", (e) => {
-        isMouseDown = true;
-        mouseDownTime = Date.now();
         updateDirection(e);
         startGame();
       });
 
-      canvas.addEventListener("mouseup", () => {
-        isMouseDown = false;
-      });
-
       canvas.addEventListener("mousemove", (e) => {
-        if (isMouseDown && (Date.now() - mouseDownTime) <= maxHoldTime) {
+        if (isMouseDown) {
           updateDirection(e);
         }
+      });
+
+      canvas.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        updateDirection(e.touches[0]);
+        startGame();
+      });
+
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        updateDirection(e.touches[0]);
       });
 
       document.getElementById("stop-btn").addEventListener("click", stopGame);
