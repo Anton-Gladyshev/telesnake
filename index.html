@@ -141,7 +141,7 @@
             snake.cells.splice(selfCollision, 1);
             snake.maxCells--;
 
-            if (snake.maxCells < 1) {
+            if (snake.maxCells < 4) {
               gameOver("Your snake ate itself");
               return;
             }
