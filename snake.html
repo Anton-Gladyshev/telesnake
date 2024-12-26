@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snake Game</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #333;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      border: 5px solid #A1A1A1;
+      border-radius: 50%;
+      position: relative;
+      background-color: #212121;
+    }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    #status {
+      font-size: 20px;
+      margin-bottom: 10px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <p id="status">Tap to start</p>
+  <div style="position: relative;">
+    <canvas id="game-board" width="400" height="400"></canvas>
+  </div>
+  <div class="controls">
+    <button id="stop-btn" disabled>Stop</button>
+  </div>
+
+  <script>
+    (function () {
+      var canvas = document.getElementById("game-board");
+      var context = canvas.getContext("2d");
+
+      var grid = 16;
+      var count = 0;
+      var gameRunning = false;
+      var radius = 200;
+      var maxAppleDistance = 0.75 * radius;
+      var isMouseDown = false;
+      var mouseDownTime = 0;
+      var maxHoldTime = 1000;
+      var statusField = document.getElementById("status");
+
+      var snake = {
+        x: 200,
+        y: 200,
+        dx: grid,
+        dy: 0,
+        cells: [],
+        maxCells: 4,
+        angle: 0
+      };
+
+      var apple = {
+        x: 320,
+        y: 320,
+      };
+
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+      }
+
+      function spawnApple() {
+        let distance;
+        do {
+          apple.x = getRandomInt(0, canvas.width / grid) * grid;
+          apple.y = getRandomInt(0, canvas.height / grid) * grid;
+          distance = Math.hypot(apple.x - 200, apple.y - 200);
+        } while (distance > maxAppleDistance);
+      }
+
+      function draw() {
+        setTimeout(function () {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+
+          snake.x += Math.cos(snake.angle) * grid;
+          snake.y += Math.sin(snake.angle) * grid;
+
+          if (Math.hypot(snake.x - 200, snake.y - 200) > radius) {
+            gameOver("Your snake touched the border");
+            return;
+          }
+
+          snake.cells.unshift({ x: snake.x, y: snake.y });
+
+          if (snake.cells.length > snake.maxCells) {
+            snake.cells.pop();
+          }
+
+          let selfCollision = -1;
+          for (let i = 1; i < snake.cells.length; i++) {
+            if (Math.hypot(snake.x - snake.cells[i].x, snake.y - snake.cells[i].y) < grid / 2) {
+              selfCollision = i;
+              break;
+            }
+          }
+
+          if (selfCollision > -1) {
+            count--;
+            statusField.textContent = `Count: ${count}`;
+            snake.cells.splice(selfCollision, 1);
+            snake.maxCells--;
+
+            if (snake.maxCells < 1) {
+              gameOver("Your snake ate itself");
+              return;
+            }
+          }
+
+          context.fillStyle = "lime";
+          snake.cells.forEach(function (cell) {
+            drawCircle(cell.x, cell.y, grid - 1, "lime");
+          });
+
+          drawCircle(apple.x, apple.y, grid - 1, "red");
+
+          if (Math.hypot(snake.x - apple.x, snake.y - apple.y) < (grid)) {
+            snake.maxCells++;
+            spawnApple();
+            count++;
+            statusField.textContent = "Count: " + count;
+          }
+
+          if (gameRunning) {
+            requestAnimationFrame(draw);
+          }
+        }, 150);
+      }
+
+      function drawCircle(x, y, radius, color) {
+        context.beginPath();
+        context.arc(x, y, radius / 2, 0, 2 * Math.PI);
+        context.fillStyle = color;
+        context.fill();
+      }
+
+      function startGame() {
+        if (!gameRunning) {
+          gameRunning = true;
+          statusField.textContent = "Count: " + count;
+          document.getElementById("stop-btn").disabled = false;
+          spawnApple();
+          draw();
+        }
+      }
+
+      function stopGame() {
+        gameRunning = false;
+        statusField.textContent = `Tap to resume (Count: ${count})`;
+        document.getElementById("stop-btn").disabled = true;
+      }
+
+      function gameOver(reason) {
+        gameRunning = false;
+        statusField.textContent = `${reason}. Tap to restart.`;
+        resetGame();
+      }
+
+      function resetGame() {
+        snake.x = 200;
+        snake.y = 200;
+        snake.cells = [];
+        snake.maxCells = 4;
+        snake.angle = 0;
+        count = 0;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function updateDirection(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left - 200;
+        const y = e.clientY - rect.top - 200;
+        snake.angle = Math.atan2(y, x);
+      }
+
+      canvas.addEventListener("mousedown", (e) => {
+        isMouseDown = true;
+        mouseDownTime = Date.now();
+        updateDirection(e);
+        startGame();
+      });
+
+      canvas.addEventListener("mouseup", () => {
+        isMouseDown = false;
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (isMouseDown && (Date.now() - mouseDownTime) <= maxHoldTime) {
+          updateDirection(e);
+        }
+      });
+
+      document.getElementById("stop-btn").addEventListener("click", stopGame);
+    })();
+  </script>
+</body>
+</html>
