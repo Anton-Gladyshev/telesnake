@@ -219,16 +219,9 @@
         mouseDownTime = Date.now();
       }
 
-      function handleMove(e) {
-        if (Date.now() - mouseDownTime <= maxHoldTime) {
-          updateDirection(e);
-        }
-      }
 
       canvas.addEventListener("mousedown", handleInput);
-      canvas.addEventListener("mousemove", handleMove);
       canvas.addEventListener("touchstart", handleInput);
-      canvas.addEventListener("touchmove", handleMove);
 
       document.getElementById("stop-btn").addEventListener("click", stopGame);
     })();
