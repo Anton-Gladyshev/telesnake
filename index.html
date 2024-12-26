@@ -50,7 +50,7 @@
   </style>
 </head>
 <body>
-  <p id="status">Tap to start</p>
+  <p id="status">Tap (click) to start</p>
   <div style="position: relative;">
     <canvas id="game-board" width="400" height="400"></canvas>
   </div>
@@ -133,7 +133,7 @@
             snake.cells.splice(selfCollision, 1);
             snake.maxCells--;
 
-            if (snake.maxCells < 1) {
+            if (snake.maxCells < 4) {
               gameOver("Your snake ate itself");
               return;
             }
