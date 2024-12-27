@@ -43,7 +43,7 @@
     #status {
       font-size: 20px;
       margin-bottom: 10px;
-      text-align: center; /* Center text */
+      text-align: center;
       font-family: 'Courier New', Courier, monospace;
       font-weight: bold;
       text-transform: uppercase;
@@ -78,7 +78,6 @@
       var maxAppleDistance = 0.75 * radius;
       var isMouseDown = false;
       var mouseDownTime = 0;
-      var maxHoldTime = 1000; // 1 second max hold time
       var statusField = document.getElementById("status");
 
       var snake = {
@@ -117,7 +116,7 @@
           snake.y += Math.sin(snake.angle) * grid;
 
           if (Math.hypot(snake.x - radius, snake.y - radius) > radius) {
-            gameOver("Your snake touched the border");
+            gameOver("The snake touched the border");
             return;
           }
 
@@ -137,12 +136,12 @@
 
           if (selfCollision > -1) {
             count--;
-            statusField.textContent = `Count: ${count}`;
+            statusField.textContent = `Count: ${count} (minus one point)`;
             snake.cells.splice(selfCollision, 1);
             snake.maxCells--;
 
             if (snake.maxCells < 4) {
-              gameOver("Your snake ate itself");
+              gameOver("The snake ate itself");
               return;
             }
           }
@@ -158,7 +157,7 @@
             snake.maxCells++;
             spawnApple();
             count++;
-            statusField.textContent = "Count: " + count;
+            statusField.textContent = `Count: ${count}`;
           }
 
           if (gameRunning) {
@@ -192,7 +191,7 @@
 
       function gameOver(reason) {
         gameRunning = false;
-        statusField.textContent = `${reason}. Tap to restart.`;
+        statusField.textContent = `${reason}! Tap to restart.`;
         resetGame();
       }
 
