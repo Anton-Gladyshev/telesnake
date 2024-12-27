@@ -136,7 +136,7 @@
 
           if (selfCollision > -1) {
             count--;
-            statusField.textContent = `Count: ${count} (minus one point)`;
+            statusField.textContent = `Count: ${count} (snake is eating itself!)`;
             snake.cells.splice(selfCollision, 1);
             snake.maxCells--;
 
